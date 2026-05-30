@@ -148,6 +148,8 @@ export AUTO_SUGGEST_NEXT="true"
 | `ENABLE_ESTIMATION` | 步骤 0.7 处理前灵力预估 + 确认 | 跳过预估直接处理 |
 | `AUTO_UPDATE_PANEL` | 笔记生成后自动更新修为面板 | 不自动更新 |
 | `AUTO_SUGGEST_NEXT` | 工作结束后提供学习路线推荐 | 不提示 |
+| `BATCH_MAX` | 单次批量最多处理任务数（默认 5） | 超过拒绝执行 |
+| `BATCH_AUTO_CONFIRM` | 批量模式下跳过确认（默认 false） | 每次都要确认 |
 | `DEBUG_METADATA` | 元信息中附加调试信息（工具调用/决策链路） | 仅基础元信息（默认 false） |
 | `NOTE_METADATA` | 笔记末尾生成元信息页脚 | 不输出文档元信息 |
 
@@ -186,6 +188,10 @@ export AUTO_SUGGEST_NEXT="true"
   - **GitHub URL**：`github.com/{owner}/{repo}` 或 `github.com/{owner}/{repo}/tree/{branch}`
   - **本地代码目录**：目录中主要是代码文件（`.py`/`.js`/`.ts`/`.rs`/`.go`/`.java`/`.c`/`.cpp`/`.h` 等），而非 `.md`/`.mp4` 等学习资料
   - 判定逻辑：如果目录中代码文件占比 > 50%，按代码项目处理，而非本地目录模式
+- **批量模式**：用户一次提供多个链接/文件 → 跳转到 [批量模式](#批量模式)
+  - 触发：逗号分隔、空格分隔、换行分隔，或显式 `/myriad-mind batch URL1 URL2 URL3`
+  - 每个资源独立处理，按顺序排队，进度实时反馈
+  - 资源密集型步骤（ASR/下载）串行，AI 步骤可并发
 - **搜索模式**：输入含 `search` / `搜索` / `找一下` / `有没有` 等关键词 → 跳转到 [搜索模式](#搜索模式)
   - 触发词：`/myriad-mind search 关键词`、`搜索笔记`、`找一下XXX`、`有没有关于XXX的笔记`
 - **对比模式**：用户输入包含 `compare` / `对比` / `比较` 等关键词 → 跳转到 [对比模式](#对比模式)
@@ -1893,6 +1899,136 @@ graph LR
 - **如果项目没有 README**：从入口文件和配置文件推断项目功能，标注 `⚠️ 项目无 README，以下分析基于代码推断`
 - **Mermaid 图表**：至少包含整体架构图 + 模块依赖关系图，复杂项目加上关键流程的时序图
 - **知识关系图**：在报告末尾添加代码架构全景关系图（代码分析模式专用，不同于学习笔记的知识关系图）
+
+---
+
+## 批量模式
+
+当用户一次提供多个链接/文件时启用。并发处理多个学习资源，排队管理，进度反馈。
+
+### 触发方式
+
+```
+/myriad-mind batch URL1 URL2 URL3
+/myriad-mind https://bilibili.com/video/BVxxx, https://youtube.com/watch?v=xxx
+帮我学习这三个：URL1 URL2 URL3
+```
+
+识别的分隔符：`,` `，` 空格 换行
+
+### BATCH1. 解析输入
+
+```bash
+# 将输入拆分为独立 URL/路径列表
+INPUTS=($(echo "{USER_INPUT}" | tr ',' '\n' | tr ' ' '\n' | sed '/^$/d'))
+echo "检测到 ${#INPUTS[@]} 个任务"
+```
+
+### BATCH2. 灵力预估（汇总）
+
+```bash
+# 对每个输入估算 Token + 时间
+for item in "${INPUTS[@]}"; do
+  # 按视频/文章/代码等类型分别估算
+  echo "$item → 类型: {TYPE} → 预估: {TOKEN} tokens, {TIME} 分钟"
+done
+echo "---"
+echo "总计: {TOTAL_TOKEN} tokens, {TOTAL_TIME} 分钟"
+```
+
+| 总预估 Token | 行为 |
+| --- | --- |
+| < 80,000 | 🟢 直接执行 |
+| 80,000-200,000 | 🟡 提示后执行 |
+| > 200,000 | 🔴 必须确认 |
+
+### BATCH3. 排队处理
+
+```bash
+TOTAL=${#INPUTS[@]}
+CURRENT=0
+FAILED=()
+
+for item in "${INPUTS[@]}"; do
+  CURRENT=$((CURRENT + 1))
+  echo "[$CURRENT/$TOTAL] 处理: $item"
+  
+  # 每个任务独立执行完整流程（步骤 1-8）
+  # 成功 → 继续下一个
+  # 失败 → 记录到 FAILED 数组，继续下一个
+  if ! process_single "$item"; then
+    FAILED+=("$item")
+  fi
+  
+  # 每个任务完成后的清理（CLEANUP_TEMP）
+done
+```
+
+**排队规则：**
+- 按输入顺序依次处理（串行）
+- **资源冲突**：ASR（GPU）和下载（带宽）同时只能跑一个，如果上一个任务还在用，后续任务等待
+- **独立失败**：某个任务失败不影响其他任务
+- **共享缓存**：如果之前处理过同一个 URL（`/tmp/video_analysis/{VIDEO_ID}/` 存在），直接复用缓存，跳过下载/ASR
+
+### BATCH4. 进度反馈
+
+```bash
+# 每完成一个任务，输出进度
+echo "━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📊 进度: $CURRENT/$TOTAL ($(( CURRENT * 100 / TOTAL ))%)"
+echo "✅ 已完成: ${COMPLETED[@]}"
+echo "⏳ 等待中: ${PENDING[@]}"
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo "❌ 失败: ${FAILED[@]}"
+fi
+echo "━━━━━━━━━━━━━━━━━━━━━━━━"
+```
+
+### BATCH5. 批量收尾
+
+所有任务完成后：
+
+```bash
+echo "🎉 批量处理完成！"
+echo "✅ 成功: ${#COMPLETED[@]}/$TOTAL"
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo "❌ 失败: ${FAILED[@]}"
+  echo "可单独重试失败的链接"
+fi
+
+# AUTO_UPDATE_PANEL=true 时一次性更新修为面板（而非每篇更新）
+# AUTO_SUGGEST_NEXT=true 时基于新学的内容推荐下一步
+```
+
+### BATCH6. 输出汇总
+
+处理完成后输出：
+
+```markdown
+📊 批量学习报告
+
+| # | 标题 | 类型 | Token | 状态 | 笔记路径 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | {标题1} | B站视频 | 80K | ✅ | [笔记1](路径) |
+| 2 | {标题2} | 知乎文章 | 25K | ✅ | [笔记2](路径) |
+| 3 | {标题3} | GitHub 仓库 | 45K | ❌ | — (下载失败) |
+
+总计消耗: ~{TOTAL}K tokens | 成功: {N} | 失败: {M}
+```
+
+### 批量模式专用说明
+
+- **资源冲突处理**：GPU（ASR）互斥锁，同一时间只能一个任务使用 CUDA；下载带宽共享
+- **缓存复用**：`/tmp/video_analysis/{VIDEO_ID}/text.txt` 存在 → 跳过下载和 ASR
+- **文章/代码模式**：无资源冲突，可立即处理
+- **修为面板**：批量模式下仅在所有任务完成后更新一次，避免频繁刷新
+
+### 配置
+
+| 配置项 | 默认 | 说明 |
+| --- | --- | --- |
+| `BATCH_MAX` | 5 | 单次批量最多处理的任务数（防误操作） |
+| `BATCH_AUTO_CONFIRM` | false | 批量模式下是否跳过确认（Token > 200K 时强制确认） |
 
 ---
 
