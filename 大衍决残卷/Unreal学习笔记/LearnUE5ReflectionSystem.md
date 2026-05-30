@@ -1,10 +1,8 @@
 # UE 反射系统（Unreal Property System & UHT）— 从原理到源码
 
-> 📂 原始资源：`C:/Users/Yxqin/Desktop/...知乎.html`
+> 📺 来源：[知乎专栏](https://zhuanlan.zhihu.com/p/2038374299053068979) | 作者：Rendererer | 14 人赞同
 >
-> 📝 来源：知乎专栏 | 作者：Rendererer | 14 人赞同
->
-> 💡 本文为文章模式生成 | 无时间戳 | 按段落结构组织
+> 💡 文章模式（本地 HTML 提取） | 无时间戳 | 按段落结构组织
 
 > 📖 推荐阅读时长：18 分钟 | 难度：🌳 深入 | 可靠性：🟢 可信
 > 🏷️ #C++ #UnrealEngine #UE5 #反射 #源码分析 #UHT
@@ -213,7 +211,7 @@ graph TD
 > | 生成模型 | DeepSeek V4 |
 > | Token 消耗 | 约 22,000 tokens |
 > | Skill 版本 | myriad-mind v2.0 |
-> | 原始资源 | 知乎专栏（本地 HTML 文件） |
+> | 原始资源 | [知乎专栏](https://zhuanlan.zhihu.com/p/2038374299053068979) |
 >
 > ⚡ 本文档由 AI 基于文章原文自动生成。文章来自知乎专栏，由用户手动下载为 HTML 后处理。
 >
