@@ -105,19 +105,7 @@ claude
 # 输入：帮我总结这篇文章 https://zhuanlan.zhihu.com/p/xxxxx
 ```
 
-## Skill 开发心得
 
-写一篇完整记录，详见 [skill-dev-journal.md](./skill-dev-journal.md)（待补充）。要点速览：
-
-1. **Skill 是 Markdown + 脚本的组合** — `SKILL.md` 定义触发条件和流程，`scripts/` 负责具体执行
-2. **权限配置很重要** — 需要在 `.claude/settings.json` 中 allow 脚本所需的 bash 命令
-3. **截图内嵌比单独章节好** — 学习笔记中，把关键帧放在对应知识点旁边，阅读体验远胜于集中展示
-4. **先跑通再优化** — 手动验证每一步的输入输出，确保每个脚本独立可用
-
-## 待办
-
-- [ ] 更多 Skill：代码审查助手、PR 摘要生成器……
-- [ ] 完善开发心得文档
 
 ## License
 
