@@ -1,4 +1,4 @@
-# video-to-subtitle-summary
+# myriad-mind
 
 A Codex / Claude Code Skill that automatically converts short video platform (Douyin, Xiaohongshu, Bilibili, YouTube, etc.) videos or local video/audio files into subtitle text and generates AI summaries.
 
@@ -92,7 +92,7 @@ ASR_BACKEND=volcengine
 **Option A: faster-whisper (default)**
 
 ```bash
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/install_faster_whisper.py
+python3 ~/.codex/skills/myriad-mind/scripts/install_faster_whisper.py
 ```
 
 > The install helper probes PyPI mirrors, chooses the fastest available mirror, creates an isolated venv, and installs `faster-whisper`. The default path is CPU. The helper switches to GPU only when NVIDIA/CUDA is available. Apple Silicon still runs on CPU. See [docs/faster-whisper-setup.md](./docs/faster-whisper-setup.md) for GPU notes.
@@ -128,15 +128,15 @@ python3 -m pip install -U yt-dlp
 
 ```bash
 # Clone the repository
-git clone https://github.com/imlewc/video-to-subtitle-summary-skill.git video-to-subtitle-summary
+git clone https://github.com/imlewc/myriad-mind-skill.git myriad-mind
 
 # Codex
 mkdir -p ~/.codex/skills
-cp -r video-to-subtitle-summary ~/.codex/skills/video-to-subtitle-summary
+cp -r myriad-mind ~/.codex/skills/myriad-mind
 
 # Claude Code
 mkdir -p ~/.claude/skills
-cp -r video-to-subtitle-summary ~/.claude/skills/video-to-subtitle-summary
+cp -r myriad-mind ~/.claude/skills/myriad-mind
 ```
 
 ### 4. Configure Environment Variables
@@ -146,7 +146,7 @@ If you need Douyin, Xiaohongshu, or Bilibili, register [AI Douyin](https://ai-do
 **Option 1: Using `.env` file (Recommended)**
 
 ```bash
-cp .env.example ~/.codex/skills/video-to-subtitle-summary/.env
+cp .env.example ~/.codex/skills/myriad-mind/.env
 # Edit the .env file with your configuration
 ```
 
@@ -207,7 +207,7 @@ Please summarize this YouTube video: https://www.youtube.com/watch?v=O87FdYIPeQk
 Or use the skill command:
 
 ```
-/video-to-subtitle-summary https://v.douyin.com/xxxxxx/
+/myriad-mind https://v.douyin.com/xxxxxx/
 ```
 
 ### Local File
@@ -219,7 +219,7 @@ Please extract subtitles and summarize: /Users/me/Downloads/video.mp4
 ```
 
 ```
-/video-to-subtitle-summary ~/Desktop/recording.mp3
+/myriad-mind ~/Desktop/recording.mp3
 ```
 
 > Local file mode skips the download step automatically. Audio files also skip audio extraction, so AI Douyin/TikHub is not required.
@@ -229,7 +229,7 @@ Please extract subtitles and summarize: /Users/me/Downloads/video.mp4
 YouTube links first run:
 
 ```bash
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/download_youtube_subtitles.py \
+python3 ~/.codex/skills/myriad-mind/scripts/download_youtube_subtitles.py \
   "https://www.youtube.com/watch?v=O87FdYIPeQk" \
   --output-dir /tmp/video_analysis/O87FdYIPeQk \
   --languages zh-Hans,zh-Hant,zh,en
@@ -242,7 +242,7 @@ This generates `/tmp/video_analysis/O87FdYIPeQk/subtitle.srt` and `/tmp/video_an
 After `AI_DOUYIN_API_KEY` is configured, you can list historical tasks for the current API Key's user:
 
 ```bash
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/list_ai_douyin_tasks.py \
+python3 ~/.codex/skills/myriad-mind/scripts/list_ai_douyin_tasks.py \
   --page 1 \
   --page-size 20
 ```
@@ -250,8 +250,8 @@ python3 ~/.codex/skills/video-to-subtitle-summary/scripts/list_ai_douyin_tasks.p
 Optional filters:
 
 ```bash
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/list_ai_douyin_tasks.py --status completed
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/list_ai_douyin_tasks.py --search "keyword" --json
+python3 ~/.codex/skills/myriad-mind/scripts/list_ai_douyin_tasks.py --status completed
+python3 ~/.codex/skills/myriad-mind/scripts/list_ai_douyin_tasks.py --search "keyword" --json
 ```
 
 The script reads `AI_DOUYIN_API_BASE` / `AI_DOUYIN_API_KEY` from the skill `.env` file or environment variables, calls `GET /api/v1/tasks`, and returns only the authenticated user's own tasks.
@@ -282,7 +282,7 @@ The script reads `AI_DOUYIN_API_BASE` / `AI_DOUYIN_API_KEY` from the skill `.env
 ## Project Structure
 
 ```text
-video-to-subtitle-summary/
+myriad-mind/
 ├── README.md
 ├── README_en.md
 ├── LICENSE

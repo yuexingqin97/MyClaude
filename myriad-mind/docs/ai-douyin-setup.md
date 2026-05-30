@@ -53,7 +53,7 @@ curl -sS -X POST "https://ai-douyin.top9.cc/api/v1/video/download-url" \
 如果需要查看当前 API Key 对应用户的历史 task，可使用 skill 自带脚本：
 
 ```bash
-python3 ~/.codex/skills/video-to-subtitle-summary/scripts/list_ai_douyin_tasks.py \
+python3 ~/.codex/skills/myriad-mind/scripts/list_ai_douyin_tasks.py \
   --page 1 \
   --page-size 20
 ```

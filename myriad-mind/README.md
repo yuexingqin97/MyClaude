@@ -1,13 +1,14 @@
-# video-to-subtitle-summary-skill 🎬
+# myriad-mind（大衍决）🔮
 
-> Claude Code / Codex Skill — 视频转字幕、AI 总结、关键帧截图、英译中、结构化学习笔记
+> Claude Code Skill — 神识一扫，万物皆可为笔记。视频转字幕/文章总结/AI 摘要/关键帧截图/英译中/Mermaid 图表/结构化学习笔记
 
-将短视频平台（抖音、小红书、B 站、YouTube 等）视频或本地视频/音频文件，一键转为：
-- **字幕文本**（SRT + 纯文本）
+将视频（抖音、小红书、B 站、YouTube 等）、文章（知乎、CSDN、Wiki 等）或本地视频/音频文件，一键炼化为：
+- **字幕文本**（SRT + 纯文本，视频模式）
 - **AI 总结**（标题 + 摘要 + 核心要点）
-- **关键帧截图**（自动按间隔或场景变化截取画面）
-- **中英对照翻译**（英文视频自动翻译为中文）
-- **结构化学习笔记**（Markdown 格式，整合字幕 + 截图 + 摘要）
+- **关键帧截图**（自动按间隔截取，视频模式）
+- **Mermaid 图表**（架构图/流程图/时序图/状态图）
+- **中英对照翻译**（英文内容自动翻译为中文）
+- **结构化学习笔记**（Markdown 格式，含术语表 + 扩展资源 + 评论区精华）
 
 ## ✨ 功能亮点
 
@@ -110,21 +111,21 @@ pip install -U yt-dlp
 
 ```bash
 # 克隆仓库
-git clone https://github.com/imlewc/video-to-subtitle-summary-skill.git
+git clone https://github.com/imlewc/myriad-mind-skill.git
 
 # 复制到 Claude Code 的 skills 目录
 mkdir -p ~/.claude/skills
-cp -r video-to-subtitle-summary-skill ~/.claude/skills/video-to-subtitle-summary
+cp -r myriad-mind-skill ~/.claude/skills/myriad-mind
 
 # 如果使用 Codex
 mkdir -p ~/.codex/skills
-cp -r video-to-subtitle-summary-skill ~/.codex/skills/video-to-subtitle-summary
+cp -r myriad-mind-skill ~/.codex/skills/myriad-mind
 ```
 
 ### 第三步：安装 faster-whisper（默认 ASR 后端）
 
 ```bash
-python3 ~/.claude/skills/video-to-subtitle-summary/scripts/install_faster_whisper.py
+python3 ~/.claude/skills/myriad-mind/scripts/install_faster_whisper.py
 ```
 
 > 安装脚本会自动检测 PyPI 镜像速度，创建独立 venv，检测到 NVIDIA GPU 时自动启用 CUDA 加速。
@@ -133,7 +134,7 @@ python3 ~/.claude/skills/video-to-subtitle-summary/scripts/install_faster_whispe
 
 ```bash
 # 复制配置模板
-cp ~/.claude/skills/video-to-subtitle-summary/.env.example ~/.claude/skills/video-to-subtitle-summary/.env
+cp ~/.claude/skills/myriad-mind/.env.example ~/.claude/skills/myriad-mind/.env
 ```
 
 编辑 `.env` 文件，填入你的 API Key：
@@ -193,7 +194,19 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 或使用 Skill 命令：
 
 ```
-/video-to-subtitle-summary https://www.bilibili.com/video/BVxxxxxxxxxx/
+/myriad-mind https://www.bilibili.com/video/BVxxxxxxxxxx/
+```
+
+### 文章
+
+提供文章链接：
+
+```
+帮我总结这篇知乎：https://zhuanlan.zhihu.com/p/xxxxx
+```
+
+```
+/myriad-mind https://blog.csdn.net/xxx/article/details/xxxxx
 ```
 
 ### 本地文件
@@ -205,7 +218,7 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 ```
 
 ```
-/video-to-subtitle-summary ~/Desktop/recording.mp3
+/myriad-mind ~/Desktop/recording.mp3
 ```
 
 > 本地文件模式无需 AI Douyin API Key，自动跳过视频下载步骤。
@@ -283,7 +296,7 @@ FW_PYTHON=/path/to/your/venv/bin/python
 ## 📁 项目结构
 
 ```text
-video-to-subtitle-summary/
+myriad-mind/
 ├── README.md                          # 本文件
 ├── SKILL.md                           # Skill 定义（Claude Code 读取）
 ├── .env.example                       # 环境变量模板
@@ -341,7 +354,7 @@ video-to-subtitle-summary/
 
 ## 🙏 致谢
 
-- 上游项目：[imlewc/video-to-subtitle-summary-skill](https://github.com/imlewc/video-to-subtitle-summary-skill)
+- 上游项目：[imlewc/myriad-mind-skill](https://github.com/imlewc/myriad-mind-skill)
 - [faster-whisper](https://github.com/SYSTRAN/faster-whisper) — 高效本地 ASR
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) — 强大的视频下载工具
 - [FFmpeg](https://ffmpeg.org/) — 音视频处理基石

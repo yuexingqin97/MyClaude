@@ -1,4 +1,4 @@
-# video-to-subtitle-summary 实现方案
+# myriad-mind 实现方案
 
 ## 概述
 

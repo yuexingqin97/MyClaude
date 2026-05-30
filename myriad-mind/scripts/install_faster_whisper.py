@@ -33,7 +33,7 @@ DEFAULT_MIRRORS = (
 
 
 def default_venv_dir() -> Path:
-    return Path.home() / ".cache" / "video-to-subtitle-summary" / "faster-whisper-venv"
+    return Path.home() / ".cache" / "myriad-mind" / "faster-whisper-venv"
 
 
 def python_in_venv(venv_dir: Path) -> Path:
@@ -44,7 +44,7 @@ def python_in_venv(venv_dir: Path) -> Path:
 
 def probe_mirror(mirror: PyPIMirror, timeout: float) -> float | None:
     target = mirror.index_url.rstrip("/") + "/faster-whisper/"
-    request = urllib.request.Request(target, headers={"User-Agent": "video-to-subtitle-summary/installer"})
+    request = urllib.request.Request(target, headers={"User-Agent": "myriad-mind/installer"})
     started = time.monotonic()
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:

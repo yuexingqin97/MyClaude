@@ -8,45 +8,67 @@
 
 ## 已开发的 Skill
 
-### 1. video-to-subtitle-summary
-
-将视频/音频转为学习笔记的全自动 pipeline：
+### 1. myriad-mind（大衍决）
 
 ```
-视频链接/本地文件 → 下载 → 字幕提取 → 关键帧截图 → AI 摘要 → 英译中 → 结构化笔记
+链接丢进去 → 神识一扫 → 结构化笔记出炉
 ```
 
-**触发条件：** 提供抖音/小红书/B站/YouTube 链接，或本地 `.mp4`/`.mp3`/`.wav` 文件。
+将视频/文章/音频炼化为学习笔记的全自动 pipeline：
+
+```
+视频链接 → 下载 → 字幕提取 → 关键帧截图 → AI 摘要 → 英译中 → Mermaid 图表 → 术语表 → 扩展资源 → 评论区精华 → 笔记出炉
+文章链接 → 抓取正文 → AI 摘要 → 英译中 → Mermaid 图表 → 术语表 → 扩展资源 → 笔记出炉
+```
+
+**触发条件：** 提供视频链接（B站/YouTube/抖音/小红书）、文章链接（知乎/CSDN/掘金/Wiki）、或本地 `.mp4`/`.mp3`/`.wav` 文件。
+
+**核心能力：**
+- 📝 AI 摘要 + 核心要点 + 结构化笔记
+- 🖼️ 关键帧截图内嵌（视频模式）
+- 🧜 Mermaid 图表自动绘制（架构图/流程图/时序图等）
+- 🌐 英文自动翻译为中英对照
+- 📖 推荐阅读时长 + 难度评级 + 可靠性评级
+- 🔗 视频时间戳可点击跳转
+- 💬 评论区精华提取（视频模式）
+- 📚 扩展学习资源推荐（官方文档/相关视频/知乎/GitHub/Wiki）
+- 📋 文档元信息（生成时间/模型/Token 消耗）
 
 **技术栈：** Python 3.12 · ffmpeg · yt-dlp · faster-whisper · Claude API
 
-**扩展功能（相比上游 [imlewc/valley](https://github.com/imlewc/video-to-subtitle-summary-skill)）：**
+**扩展功能（相比上游 [imlewc/video-to-subtitle-summary-skill](https://github.com/imlewc/video-to-subtitle-summary-skill)）：**
 - 🖼️ 关键帧截图，自动嵌入到对应知识点旁边
 - 🌐 英文视频自动翻译为中英对照
-- 📝 整合字幕+截图+翻译+摘要的 Markdown 学习笔记
+- 🧜 Mermaid 图表自动生成
+- 📄 文章学习模式（知乎/CSDN/Wiki 等）
+- ⭐ 阅读时长/难度/可靠性评级
+- 💬 评论区精华提取
+- 📚 扩展学习资源推荐
+- 📋 文档生成元信息
 
-详见 [`video-to-subtitle-summary-skill/`](./video-to-subtitle-summary-skill/)
+详见 [`myriad-mind/`](./myriad-mind/)
 
 ## 项目结构
 
 ```
 MyClaude/
-├── .claude/                          # Claude Code 项目配置
-│   └── settings.local.json           # 权限 & hook 配置
-├── video-to-subtitle-summary-skill/  # Skill 源码
-│   ├── SKILL.md                      # Skill 定义（触发条件、流程）
-│   ├── scripts/                      # Python 脚本
+├── .claude/                       # Claude Code 项目配置
+│   └── settings.local.json        # 权限 & hook 配置
+├── myriad-mind/                   # 大衍决 Skill 源码
+│   ├── SKILL.md                   # Skill 定义（触发条件、流程）
+│   ├── scripts/                   # Python 脚本
 │   │   ├── download_video_candidates.py
 │   │   ├── transcribe_faster_whisper.py
-│   │   ├── extract_keyframes.py      # 关键帧截图
+│   │   ├── extract_keyframes.py   # 关键帧截图
 │   │   ├── download_youtube_subtitles.py
 │   │   └── list_ai_douyin_tasks.py
-│   ├── docs/                         # 文档 & 环境配置指南
-│   └── tests/                        # 测试用例
-├── Docs/                                     # Skill 输出产物
-│   ├── 视频字幕总结Skill实现方案.md              # 技术架构 & 实现方案
-│   └── Bevy学习笔记/LearnEcs.md                # 示例：Bevy ECS 教程学习笔记
-└── README.md                         # 本文件
+│   ├── docs/                      # 文档 & 环境配置指南
+│   └── tests/                     # 测试用例
+├── Docs/                          # Skill 输出产物
+│   ├── 视频字幕总结Skill实现方案.md   # 技术架构 & 实现方案
+│   ├── Bevy学习笔记/               # 示例笔记
+│   └── Unreal学习笔记/             # 示例笔记
+└── README.md                      # 本文件
 ```
 
 ## 快速开始
@@ -58,7 +80,7 @@ MyClaude/
 - **ffmpeg**（字幕提取、关键帧截图）
 - **yt-dlp**（在线视频下载）
 - **faster-whisper**（本地语音识别，可选）
-- **AI Douyin API Key**（抖音视频处理，可选）
+- **AI Douyin API Key**（抖音/小红书/B站视频处理，可选）
 
 ### 安装 & 使用
 
@@ -71,15 +93,16 @@ git clone git@github.com:yuexingqin97/MyClaude.git
 cd MyClaude
 
 # 3. 部署 Skill
-cp -r video-to-subtitle-summary-skill/ ~/.claude/skills/video-to-subtitle-summary/
+cp -r myriad-mind/ ~/.claude/skills/myriad-mind/
 
 # 4. 安装依赖
 pip install faster-whisper yt-dlp ffmpeg-python pillow
-# 配置 .env（参考 video-to-subtitle-summary-skill/.env.example）
+# 配置 .env（参考 myriad-mind/.env.example）
 
 # 5. 在 Claude Code 中使用
 claude
 # 输入：帮我总结这个视频 https://www.bilibili.com/video/BV14UzWBLEXD
+# 输入：帮我总结这篇文章 https://zhuanlan.zhihu.com/p/xxxxx
 ```
 
 ## Skill 开发心得
@@ -93,7 +116,6 @@ claude
 
 ## 待办
 
-- [ ] 安装 CUDA 库启用 GPU 加速 whisper
 - [ ] 更多 Skill：代码审查助手、PR 摘要生成器……
 - [ ] 完善开发心得文档
 
