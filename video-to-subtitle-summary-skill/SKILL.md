@@ -615,6 +615,23 @@ with open('/tmp/video_analysis/{VIDEO_ID}/subtitle.srt', 'w') as f:
 
 > 如果步骤 3.5 生成了关键帧截图，Claude 应使用视觉能力分析每张截图的内容，将其融入笔记。
 
+#### 步骤 7.0：时间戳可点击链接（重要）
+
+**所有时间戳必须生成可点击的跳转链接**，方便读者直接跳转到视频对应位置。根据平台使用不同 URL 格式：
+
+| 平台 | 时间戳链接格式 | 示例 |
+| --- | --- | --- |
+| **B 站** | `{原始链接}?t={总秒数}` | `https://www.bilibili.com/video/BV14UzWBLEXD/?t=180` |
+| **YouTube** | `https://www.youtube.com/watch?v={VIDEO_ID}&t={总秒数}` | `https://www.youtube.com/watch?v=abc123&t=180` |
+| **抖音** | 短视频无需时间戳，用原始链接即可 | `https://v.douyin.com/xxxxx/` |
+| **小红书** | 短视频无需时间戳，用原始链接即可 | `https://xhslink.com/xxxxx/` |
+| **本地文件** | `[HH:MM:SS](file:///绝对路径?t={总秒数})` | `[3:00](file:///D:/Videos/tutorial.mp4?t=180)` |
+
+**转换规则：**
+- SRT 时间戳格式 `HH:MM:SS,mmm` → 总秒数 = `HH*3600 + MM*60 + SS`
+- 笔记中每个段落标题的时间范围，起始时间转为可点击链接，结束时间保留为纯文本
+- 截图旁边的时间戳同样生成可点击链接
+
 **笔记生成提示：**
 
 ```text
@@ -624,6 +641,7 @@ with open('/tmp/video_analysis/{VIDEO_ID}/subtitle.srt', 'w') as f:
 作者：{AUTHOR}
 时长：{DURATION}
 来源：{PLATFORM}
+原始链接：{ORIGINAL_URL}
 
 字幕文本（已翻译/原文）：
 {TEXT_CONTENT}
@@ -640,6 +658,23 @@ AI 摘要：
 3. 关键画面描述（分析截图内容，标注时间点）
 4. 关键术语表（英文术语 → 中文翻译 → 简要说明）
 5. 总结与思考
+
+**重要格式要求：**
+- 所有时间戳必须做成可点击的 Markdown 链接，格式为 [MM:SS](视频链接?t=总秒数)
+- 每个笔记段落的标题格式：### [▶ MM:SS](链接?t=秒数) - MM:SS | 段落标题
+- 截图下方的时间标注同样需要可点击链接
+- 示例：### [▶ 3:00](https://www.bilibili.com/video/BV14UzWBLEXD/?t=180) - 8:00 | Query 与 System 参数
+```
+
+**输出示例（B 站）：**
+
+```markdown
+### [▶ 3:00](https://www.bilibili.com/video/BV14UzWBLEXD/?t=180) - 8:00 | Query 与 System 参数
+
+![System 参数代码](assets/BV14UzWBLEXD/frame_0005.png)
+
+- Query 由 `QueryData` + `QueryFilter` 组成
+- System 参数宽松：可混合 Query、Resource、Commands
 ```
 
 将学习笔记保存到 `/tmp/video_analysis/{VIDEO_ID}/learning_notes.md`。

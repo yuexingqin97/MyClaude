@@ -43,8 +43,9 @@ MyClaude/
 │   │   └── list_ai_douyin_tasks.py
 │   ├── docs/                         # 文档 & 环境配置指南
 │   └── tests/                        # 测试用例
-├── Docs/                             # Skill 输出产物
-│   └── Bevy/LearnEcs.md              # 示例：Bevy ECS 教程学习笔记
+├── Docs/                                     # Skill 输出产物
+│   ├── 视频字幕总结Skill实现方案.md              # 技术架构 & 实现方案
+│   └── Bevy学习笔记/LearnEcs.md                # 示例：Bevy ECS 教程学习笔记
 └── README.md                         # 本文件
 ```
 
