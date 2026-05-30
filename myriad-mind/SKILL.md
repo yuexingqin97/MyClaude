@@ -2116,9 +2116,14 @@ graph TD
     BEVY_ECS -.->|"ECS 思想可迁移"| UE5
     UE5_ST -.->|"AI 行为设计"| NEXT_AI["📤 行为树/GOAP"]
     BEVY_2D -.->|"渲染管线"| NEXT_GFX["📤 图形学"]
+
+    click BEVY_ECS "./Bevy学习笔记/LearnEcs.md" "打开笔记"
+    click BEVY_2D "./Bevy学习笔记/Learn2D.md" "打开笔记"
+    click UE5 "./Unreal学习笔记/LearnUE5TypeSystem.md" "打开笔记"
+    click UE5_ST "./Unreal学习笔记/LearnStateTree.md" "打开笔记"
 ```
 
-> ⚠️ **Mermaid 语法注意**：节点标签中不能出现 `|` 字符（Mermaid 关键字），用 `·` 替代。缩进用 tab。换行用 `\n`（不用 `<br/>`，quoted 标签内 `<br/>` 不解析）。subgraph 标签和 edge label 含特殊字符时加双引号。**所有图表首行加 `%%{init: {'theme': 'dark'}}%%`** 以保证浅色/深色背景下均可读。
+> ⚠️ **Mermaid 语法注意**：节点标签中不能出现 `|` 字符（Mermaid 关键字），用 `·` 替代。缩进用 tab。换行用 `\n`（不用 `<br/>`，quoted 标签内 `<br/>` 不解析）。subgraph 标签和 edge label 含特殊字符时加双引号。**所有图表首行加 `%%{init: {'theme': 'dark'}}%%`** 以保证浅色/深色背景下均可读。**知识全景图必须给每个笔记节点加 `click` 指令**，用相对路径（`./子目录/笔记.md`），让读者能从图谱直接跳转到笔记。：节点标签中不能出现 `|` 字符（Mermaid 关键字），用 `·` 替代。缩进用 tab。换行用 `\n`（不用 `<br/>`，quoted 标签内 `<br/>` 不解析）。subgraph 标签和 edge label 含特殊字符时加双引号。**所有图表首行加 `%%{init: {'theme': 'dark'}}%%`** 以保证浅色/深色背景下均可读。
 
 **生成规则：**
 1. 用 `subgraph` 按技术栈/领域分组（Rust 生态、Unreal、前端、AI 等）
