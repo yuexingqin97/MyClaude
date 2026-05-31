@@ -1,67 +1,84 @@
 # myriad-mind（大衍决）🔮
 
-> Claude Code Skill — 神识一扫，万物皆可为笔记。视频转字幕/文章总结/AI 摘要/关键帧截图/英译中/Mermaid 图表/结构化学习笔记
+> Claude Code Skill — 神识一扫，万物皆可为笔记。
+>
+> 视频/文章/本地文件/代码项目 → AI 摘要 + 关键帧截图 + Mermaid 图表 + 术语表 + 评论区精华 + 知识关系图 + 扩展资源，一炉出丹。
+>
+> **v2.1** | 9 种输入模式 | 30+ 功能 | 20+ 配置项
 
-将视频（抖音、小红书、B 站、YouTube 等）、文章（知乎、CSDN、Wiki 等）或本地视频/音频文件，一键炼化为：
-- **字幕文本**（SRT + 纯文本，视频模式）
-- **AI 总结**（标题 + 摘要 + 核心要点）
-- **关键帧截图**（自动按间隔截取，视频模式）
-- **Mermaid 图表**（架构图/流程图/时序图/状态图）
-- **中英对照翻译**（英文内容自动翻译为中文）
-- **结构化学习笔记**（Markdown 格式，含术语表 + 扩展资源 + 评论区精华）
+---
 
-## ✨ 功能亮点
+## ✨ 功能矩阵
 
-| 功能 | 说明 |
+### 输入（9 种模式）
+
+| # | 模式 | 触发方式 |
+|---|------|---------|
+| 🎥 | 在线视频 | B站 / YouTube / 抖音 / 小红书 URL |
+| 📝 | 在线文章 | 知乎 / CSDN / 掘金 / Wiki / 公众号 URL |
+| 🎬 | 本地视频/音频 | `.mp4` / `.mov` / `.mp3` / `.wav` 文件路径 |
+| 📄 | 本地文档 | `.md` / `.txt` / `.pdf` / `.rst` 文件路径 |
+| 📁 | 本地目录 | 递归扫描，批量合并笔记 |
+| 💻 | 代码项目 | GitHub URL 或本地代码目录 |
+| 📊 | 修为面板 | `/myriad-mind 修为面板` |
+| ⚖️ | 对比模式 | `/myriad-mind compare A B` |
+| 🔍 | 搜索模式 | `/myriad-mind search 关键词` |
+
+### 输出（8 大板块）
+
+| # | 板块 | 说明 |
+|---|------|------|
+| 1 | AI 摘要 | 标题 + 一句话总结 + 核心要点 |
+| 2 | 详细笔记 | 可点击时间戳、代码示例、结构化段落 |
+| 3 | 关键帧截图 | 🎯字幕引导 + 结构化审查 + 审计追踪，内嵌知识点旁 |
+| 4 | Mermaid 图表 | 架构图/流程图/时序图/状态图/类图，自动 dark theme |
+| 5 | 关键术语表 | 英→中→说明，三列对照 |
+| 6 | 评论区精华 | 精选高价值讨论 + 编辑注 + 跳转链接 |
+| 7 | 知识关系图 | 每篇末尾的本课全景知识图谱 |
+| 8 | 扩展学习资源 | 官方文档/相关视频/文章/GitHub/社区/延伸阅读 |
+
+### 智能特性
+
+| 特性 | 说明 |
 |------|------|
-| 🎥 多平台支持 | 抖音、小红书、B 站、YouTube、本地视频/音频文件 |
-| 📝 字幕提取 | faster-whisper 本地 ASR（免费）+ 火山引擎云端 ASR（可选） |
-| 🤖 AI 总结 | Claude 直接生成标题、摘要、核心要点 |
-| 📸 关键帧截图 | ffmpeg 按时间间隔 / 场景变化自动截取，生成 JSON 索引 |
-| 🌐 英译中 | 检测字幕语言，英文内容自动翻译并保留中英对照 |
-| 📚 学习笔记 | 整合字幕 + 截图 + 翻译 + 摘要，生成 Markdown 学习笔记 |
-| 🚀 GPU 加速 | 支持 NVIDIA CUDA 加速 whisper 转写 |
+| 🎯 字幕引导截图 (v2.1) | ASR 后分析字幕识别关键画面类型，反向推导最佳截图时间点 |
+| 🔍 结构化截图审查 (v2.1) | 每张截图标注来源/质量评分/选中或跳过原因，完整审计追踪 |
+| 💬 评论萃取 | B站/YouTube 评论自动获取→筛选→精华→嵌入笔记 |
+| 🎓 教程检测 | 自动识别操作型视频，生成可点击操作流程图 |
+| ⚡ 灵力预估 | 处理前估算时间+Token 消耗，超阈值确认 |
+| 🏷️ 标签提取 | 自动提取 5 维度标签：技术栈/框架/主题/类型/难度 |
+| 📊 可靠性评级 | 🟢🟡🟠🔴 四档，版本匹配+官方一致性+争议检测 |
+| 📖 阅读元信息 | 预估阅读时长 + 难度评级 🌱🌿🌳 |
+| 🔧 调试追踪 | 分步耗时 + Token + 截图来源 + 跳过原因 + 决策链路全记录 |
+
+### 修为系统
+
+| 组件 | 说明 |
+|------|------|
+| 修炼等级 | 炼气→筑基→金丹→元婴→化神→大乘→渡劫（7 级修仙体系） |
+| 成就系统 | 6 项自动判定（初入仙门/博览群书/炼器大师/炼丹宗师/渡劫飞升/开宗立派） |
+| 修为面板 | 知识全景 + 仪表盘 + 标签云 + 技能矩阵 + 学习里程碑 |
+| 等级公式 | 笔记数×10 + 进阶×5 + 深入×10 + 技术栈×8 + 学习小时×2 |
+
+---
 
 ## 📋 效果演示
 
-在 Claude Code 中发送：
+在 Claude Code 中发送一个 B 站视频链接，自动生成结构化学习笔记：
 
 ```
-帮我学习这个B站视频：https://www.bilibili.com/video/BV1xxxxxxxxxx
-```
+## Bevy ECS 全面学习笔记（v2.1 重制版）
 
-自动输出：
+> 📺 来源：Bilibili BV14UzWBLEXD | 时长：~55 分钟
+> 📖 阅读时长：25 分钟 | 难度：🌿 进阶 | 可靠性：🟡 参考
+> 🏷️ #Rust #Bevy #ECS #源码分析 #进阶
 
-```markdown
-## 视频分析结果
+一、AI 摘要 → 二、核心概念（7 个子节，含 Mermaid 图表 + 代码示例）
+→ 三、官方示例划重点（27 个示例逐一讲解，含 12 张截图 + 代码块）
+→ 四、关键术语表 → 五、总结与思考 → 六、知识关系图
+→ 七、评论区精华 → 八、扩展学习资源
 
-### 视频信息
-| 项目 | 内容 |
-|------|------|
-| 视频ID | BV1xxxxxxxxxx |
-| 作者 | 某知识博主 |
-| 时长 | 15:30 |
-| 来源平台 | B站 |
-
-### AI生成标题
-深度解析 Transformer 架构与注意力机制
-
-### AI摘要
-视频系统讲解了 Transformer 的核心架构...
-
-### 核心要点
-1. 自注意力机制（Self-Attention）的原理与计算方式
-2. 多头注意力如何捕获不同维度的语义关系
-3. 位置编码的必要性及正弦编码方案
-
-### 生成文件
-- 视频: /tmp/video_analysis/BV1xxxxxxxxxx/video.mp4
-- 音频: /tmp/video_analysis/BV1xxxxxxxxxx/audio.mp3
-- SRT字幕: /tmp/video_analysis/BV1xxxxxxxxxx/subtitle.srt
-- 纯文本: /tmp/video_analysis/BV1xxxxxxxxxx/text.txt
-- 关键帧截图: /tmp/video_analysis/BV1xxxxxxxxxx/frames/
-- 翻译文本: /tmp/video_analysis/BV1xxxxxxxxxx/translated_text.txt
-- 学习笔记: /tmp/video_analysis/BV1xxxxxxxxxx/learning_notes.md
+🔧 调试信息：流水线耗时 + 截图来源追踪表 + 跳过原因 + 决策链路图
 ```
 
 ---
@@ -76,7 +93,7 @@
 | [FFmpeg](https://ffmpeg.org/) | ✅ 必须 | 音视频处理 |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | B站/YouTube 需要 | 视频下载与字幕抓取 |
 | Python 3.9+ | faster-whisper 需要 | 本地语音转文字 |
-| [faster-whisper](https://github.com/SYSTRAN/faster-whisper) | 默认 ASR 后端 | 免费，本地运行 |
+| [faster-whisper](https://github.com/SYSTRAN/faster-whisper) | 默认 ASR 后端 | 免费，本地运行，支持 CUDA |
 | [AI Douyin](https://ai-douyin.top9.cc) API Key | 抖音/小红书/B站需要 | 视频解析代理，免费额度 |
 
 ### 第一步：安装系统依赖
@@ -140,25 +157,34 @@ cp ~/.claude/skills/myriad-mind/.env.example ~/.claude/skills/myriad-mind/.env
 编辑 `.env` 文件，填入你的 API Key：
 
 ```bash
-# ASR 后端（默认 faster-whisper，可选 volcengine）
-ASR_BACKEND=faster-whisper
+# ========== ASR 后端 ==========
+ASR_BACKEND=faster-whisper        # faster-whisper（免费）/ volcengine
 
-# 视频解析代理（抖音/小红书/B站需要，YouTube 不需要）
-# 注册 https://ai-douyin.top9.cc 获取免费 API Key
-VIDEO_INFO_PROVIDER=ai-douyin
+# ========== 视频解析代理 ==========
+VIDEO_INFO_PROVIDER=ai-douyin     # ai-douyin / tikhub
 AI_DOUYIN_API_BASE=https://ai-douyin.top9.cc
 AI_DOUYIN_API_KEY=your_api_key_here
 
-# faster-whisper 参数
-FW_MODEL_SIZE=small        # tiny/base/small/medium/large-v2
-FW_DEVICE=auto             # auto 自动检测 GPU
-FW_COMPUTE_TYPE=           # 留空自动选择
-FW_PYTHON=                 # 留空使用默认 venv
+# ========== faster-whisper 参数 ==========
+FW_MODEL_SIZE=small               # tiny/base/small/medium/large-v2
+FW_DEVICE=auto                    # auto 自动检测 GPU
+FW_COMPUTE_TYPE=                  # 留空自动选择
+FW_PYTHON=                        # 留空使用默认 venv
 
-# 关键帧截图参数
-KF_INTERVAL=30             # 每 N 秒截一张图
-KF_MAX_FRAMES=50           # 最多截取 N 张
-KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=两者
+# ========== 截图参数 ==========
+KF_INTERVAL=30                    # 每 N 秒截一张图
+KF_MAX_FRAMES=50                  # 最多截取 N 张
+KF_MODE=interval                  # interval / scene / both
+
+# ========== 输出控制 ==========
+NOTE_OUTPUT_DIR=./大衍决残卷       # 笔记输出目录（默认项目根目录）
+CLEANUP_TEMP=true                 # 完成后清理临时文件
+DRY_RUN=false                     # 调试模式，跳过下载直接用缓存
+
+# ========== 自动化 ==========
+AUTO_UPDATE_PANEL=true            # 新笔记后自动更新修为面板
+AUTO_SUGGEST_NEXT=true            # 自动推荐下一步学习内容
+DEBUG_METADATA=true               # 生成调试信息（分步耗时+决策链路+截图追踪）
 ```
 
 ### 第五步：重启 Claude Code
@@ -176,10 +202,6 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 在 Claude Code 中直接发送视频链接：
 
 ```
-帮我总结这个视频：https://v.douyin.com/xxxxxx/
-```
-
-```
 帮我学习这个B站视频：https://www.bilibili.com/video/BVxxxxxxxxxx/
 ```
 
@@ -188,7 +210,7 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 ```
 
 ```
-帮我学习这个小红书视频：https://www.xiaohongshu.com/explore/xxxxxx
+帮我总结这个抖音视频：https://v.douyin.com/xxxxxx/
 ```
 
 或使用 Skill 命令：
@@ -197,9 +219,7 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 /myriad-mind https://www.bilibili.com/video/BVxxxxxxxxxx/
 ```
 
-### 文章
-
-提供文章链接：
+### 在线文章
 
 ```
 帮我总结这篇知乎：https://zhuanlan.zhihu.com/p/xxxxx
@@ -211,8 +231,6 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 
 ### 本地文件
 
-直接提供文件路径：
-
 ```
 请帮我提取字幕并总结：~/Downloads/lecture.mp4
 ```
@@ -221,13 +239,47 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 /myriad-mind ~/Desktop/recording.mp3
 ```
 
+```
+帮我分析这篇文档：~/Documents/rust-guide.md
+```
+
 > 本地文件模式无需 AI Douyin API Key，自动跳过视频下载步骤。
 
-### 查看历史任务
+### 代码项目
 
 ```
-查看我的 AI Douyin 历史任务
+帮我分析这个项目：https://github.com/bevyengine/bevy
 ```
+
+```
+/myriad-mind ~/projects/my-game/
+```
+
+> 代码分析前自动评估项目规模，超阈值会给出完整/核心/概览/自定义四个选项。
+
+### 对比模式
+
+```
+/myriad-mind compare LearnEcs.md LearnEcs_v2.md
+```
+
+> 生成两篇笔记的结构/内容/质量/深度对比报告。
+
+### 搜索模式
+
+```
+/myriad-mind search ECS
+```
+
+> 全文检索所有笔记，输出含上下文的相关段落。
+
+### 修为面板
+
+```
+/myriad-mind 修为面板
+```
+
+> 展示修炼等级、成就徽章、技术栈分布、技能矩阵、学习里程碑、标签云。
 
 ---
 
@@ -237,24 +289,16 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 
 | 后端 | 环境变量值 | 说明 | 费用 |
 |------|-----------|------|------|
-| faster-whisper（默认） | `ASR_BACKEND=faster-whisper` | 本地 ASR，支持 GPU 加速 | 免费 |
+| faster-whisper（默认） | `ASR_BACKEND=faster-whisper` | 本地 ASR，支持 CUDA 加速 | 免费 |
 | 火山引擎 VC | `ASR_BACKEND=volcengine` | 云端 ASR | 按量付费 |
 
 ### 视频解析代理
 
-| 代理 | 环境变量值 | 适用平台 | 费用 |
-|------|-----------|---------|------|
-| AI Douyin（推荐） | `VIDEO_INFO_PROVIDER=ai-douyin` | 抖音/小红书/B站 | 免费额度，解析扣 1 积分 |
-| TikHub | `VIDEO_INFO_PROVIDER=tikhub` | 抖音/小红书/B站 | 按 TikHub 套餐 |
-| 无需代理 | — | YouTube | 免费（yt-dlp 直接抓字幕） |
-
-### 关键帧截图参数
-
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `KF_INTERVAL` | 30 | 每隔多少秒截一张图 |
-| `KF_MAX_FRAMES` | 50 | 最多截取多少张 |
-| `KF_MODE` | interval | `interval`（固定间隔）/ `scene`（场景变化检测）/ `both`（两种都截） |
+| 代理 | 适用平台 | 费用 |
+|------|---------|------|
+| AI Douyin（推荐） | 抖音/小红书/B站 | 免费额度，解析扣 1 积分 |
+| TikHub | 抖音/小红书/B站 | 按 TikHub 套餐 |
+| 无需代理 | YouTube | 免费（yt-dlp 直接抓字幕） |
 
 ### faster-whisper 模型选择
 
@@ -266,30 +310,65 @@ KF_MODE=interval           # interval=固定间隔 / scene=场景变化 / both=�
 | medium | ~5 GB | 较慢 | 很好 |
 | large-v2 | ~10 GB | 最慢 | 最好 |
 
+### 输出控制
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `NOTE_OUTPUT_DIR` | `./大衍决残卷` | 笔记输出目录 |
+| `CLEANUP_TEMP` | `true` | 完成后清理 `/tmp/video_analysis/` 缓存 |
+| `DRY_RUN` | `false` | 调试模式，跳过下载直接用已有缓存 |
+| `DEBUG_METADATA` | `true` | 生成调试信息（流水线耗时+截图审计+决策链路） |
+
+### 自动化
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `AUTO_UPDATE_PANEL` | `true` | 新笔记自动更新修为面板统计 |
+| `AUTO_SUGGEST_NEXT` | `true` | 基于知识结构自动推荐下一步学习 |
+| `TUTORIAL_DETECTION` | `true` | 自动检测教程视频，启用操作流程图 |
+
 ---
 
-## 🔧 高级配置
+## 🏗️ 技术架构
 
-### 使用 TikHub 替代 AI Douyin
-
-如果你已有 TikHub Token，可以在 `.env` 中切换：
-
-```bash
-VIDEO_INFO_PROVIDER=tikhub
-TIKHUB_TOKEN=your_tikhub_token
+```
+用户输入
+    │
+    ▼
+步骤 0：模式识别（URL/文件/目录/关键词）
+    │
+    ▼
+步骤 0.5：读取配置（.env）
+    │
+    ▼
+步骤 0.7：灵力预估（时间+Token，超阈值确认）
+    │
+    ▼
+步骤 1-4：内容获取（下载/ASR/抓取）
+    │
+    ▼
+步骤 4.5：字幕分析（🎯引导：识别截图时间点）
+    │
+    ▼
+步骤 4.7：截图提取（ffmpeg 精准截图）
+    │
+    ▼
+步骤 5-6：AI 摘要 + 语言检测/翻译
+    │
+    ▼
+步骤 7：生成笔记
+    ├─ 7.1：截图审查（逐张审视→评分→筛选）
+    ├─ 7.2：评论获取+筛选
+    └─ 7.3：笔记生成（Mermaid+术语+资源+关系图）
+    │
+    ▼
+步骤 8：清理临时文件
+    │
+    ▼
+步骤 9：收尾（更新修为面板+学习建议）
 ```
 
-### 使用火山引擎 ASR
-
-详见 [docs/bytedance-vc-setup.md](./docs/bytedance-vc-setup.md)。
-
-### 指定 Python 路径
-
-如果你有独立 venv 安装了 faster-whisper：
-
-```bash
-FW_PYTHON=/path/to/your/venv/bin/python
-```
+**核心思路：** 所有"体力活"用脚本（下载/ASR/截图），所有"脑力活"用 Claude（理解/总结/画图/推荐）。人是炼气士，Claude 是炉鼎——人定方向，AI 出力。
 
 ---
 
@@ -298,8 +377,9 @@ FW_PYTHON=/path/to/your/venv/bin/python
 ```text
 myriad-mind/
 ├── README.md                          # 本文件
-├── SKILL.md                           # Skill 定义（Claude Code 读取）
-├── .env.example                       # 环境变量模板
+├── SKILL.md                           # Skill 定义（Claude Code 读取，~3000 行）
+├── CHANGELOG.md                       # 版本更新日志
+├── .env.example                       # 环境变量模板（20+ 配置项）
 ├── LICENSE                            # MIT 协议
 ├── scripts/
 │   ├── extract_keyframes.py           # 关键帧截图脚本
@@ -307,7 +387,7 @@ myriad-mind/
 │   ├── download_youtube_subtitles.py  # YouTube 字幕抓取
 │   ├── install_faster_whisper.py      # faster-whisper 安装助手
 │   ├── list_ai_douyin_tasks.py        # AI Douyin 历史任务查询
-│   └── transcribe_faster_whisper.py   # faster-whisper 转写
+│   └── transcribe_faster_whisper.py   # faster-whisper 转写（支持 CUDA）
 ├── tests/                             # 单元测试
 └── docs/                              # 配置教程
     ├── ai-douyin-setup.md
@@ -315,6 +395,26 @@ myriad-mind/
     ├── faster-whisper-setup.md
     └── bytedance-vc-setup.md
 ```
+
+---
+
+## 📊 版本演进
+
+| 版本 | 日期 | 关键变化 |
+|------|------|---------|
+| v0.1 | 05-20 | 奠基：视频→字幕→摘要 pipeline |
+| v0.2 | 05-21 | 关键帧截图 + 英译中 |
+| v0.3 | 05-22 | 可点击时间戳 + 字幕交叉校验截图 |
+| v0.4 | 05-23 | Mermaid 图表 + 文章模式 + 扩展资源 |
+| v0.5 | 05-26 | 评论区精华 + 可靠性评级 + 元信息 |
+| v0.6 | 05-28 | 改名大衍决（myriad-mind） |
+| v0.7 | 05-29 | 代码项目分析 + 本地目录 + 灵力预估 |
+| v0.8 | 05-30 | 教程检测 + 对比模式 + 知识地图 |
+| v0.9 | 05-31 | 修为面板 + 搜索 + 标签 + 修炼等级 + 收尾自动化 |
+| v2.0 | 05-31 | 定型版：bug 修复 + 配置补全 + 旧笔记重生成 |
+| **v2.1** | **05-31** | **截图系统改良：🎯字幕引导 + 结构化审查 + 审计追踪 + 评论区精华** |
+
+> 详见 [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
@@ -329,7 +429,7 @@ myriad-mind/
 | 火山引擎 VC | 仅 `ASR_BACKEND=volcengine` 时产生费用 |
 | Claude Code | 取决于你的订阅计划 |
 
-> 默认方案（faster-whisper + AI Douyin）成本极低，基本可以零费用使用。
+> 默认方案（faster-whisper + AI Douyin）成本极低，基本可以零费用使用。一篇 55 分钟视频约消耗 5-8 万 tokens。
 
 ---
 
@@ -345,6 +445,9 @@ myriad-mind/
 | 首次运行很慢 | faster-whisper 首次下载模型文件，后续会使用缓存 |
 | CUDA 不可用 | `FW_DEVICE=auto` 会自动回退到 CPU，不影响使用 |
 | Windows 下 ffmpeg 路径问题 | 脚本会自动搜索 `WinGet\Packages` 目录 |
+| 笔记输出到哪里 | 默认 `./大衍决残卷/`，可通过 `NOTE_OUTPUT_DIR` 自定义 |
+| 如何搜索旧笔记 | `/myriad-mind search 关键词` |
+| 如何对比两篇笔记 | `/myriad-mind compare A.md B.md` |
 
 ---
 
