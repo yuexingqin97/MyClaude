@@ -69,6 +69,12 @@ CLEANUP_TEMP="true"
 NOTE_METADATA="true"
 NOTE_OUTPUT_DIR=""
 
+# 关键帧截图参数（smart 模式）
+KF_MAX_FRAMES="40"
+KF_SCENE_THRESHOLD="0.25"
+KF_MAX_GAP="120"
+KF_MIN_GAP="3"
+
 # 功能开关（全部默认开启，设为 false 关闭对应功能）
 ENABLE_KEYFRAMES="true"
 ENABLE_MERMAID="true"
@@ -107,6 +113,12 @@ export CLEANUP_TEMP="true"
 export NOTE_METADATA="true"
 export NOTE_OUTPUT_DIR=""
 
+# 关键帧截图参数（smart 模式）
+export KF_MAX_FRAMES="40"
+export KF_SCENE_THRESHOLD="0.25"
+export KF_MAX_GAP="120"
+export KF_MIN_GAP="3"
+
 # 功能开关（全部默认开启，设为 false 关闭对应功能）
 export ENABLE_KEYFRAMES="true"
 export ENABLE_MERMAID="true"
@@ -134,6 +146,10 @@ export AUTO_SUGGEST_NEXT="true"
 - `CLEANUP_TEMP`：可选，默认 `true`。流程完成后自动清理 `/tmp/video_analysis/{VIDEO_ID}/` 临时文件（视频、音频、字幕、截图）。设为 `false` 保留文件用于调试
 - `NOTE_METADATA`：可选，默认 `true`。在文档末尾附加生成元信息（生成时间、模型、Token 消耗等）。设为 `false` 不输出
 - `NOTE_OUTPUT_DIR`：可选，默认为空。学习笔记输出目录。留空则输出到当前工作目录（`pwd`）下；设值则输出到指定路径。支持绝对路径（`D:/Notes`）或相对路径（`./大衍决残卷`）。示例：`NOTE_OUTPUT_DIR="D:/Project/MyClaude/大衍决残卷"`
+- `KF_MAX_FRAMES`：可选，默认 `40`。最大截图数量
+- `KF_SCENE_THRESHOLD`：可选，默认 `0.25`。场景检测灵敏度（越低越敏感，0.15=极敏感，0.4=只抓大变化）
+- `KF_MAX_GAP`：可选，默认 `120`。最长静态间隔秒数，超过此值强制补截一张
+- `KF_MIN_GAP`：可选，默认 `3`。最短帧间距秒数，小于此值的去重
 
 **功能开关（全部默认 `true`，可按需关闭）：**
 
@@ -550,46 +566,10 @@ yt-dlp -o /tmp/video_analysis/{BVID}/video.mp4 "https://www.bilibili.com/video/{
 ffmpeg -i /tmp/video_analysis/{VIDEO_ID}/video.mp4 -q:a 0 -map a -y /tmp/video_analysis/{VIDEO_ID}/audio.mp3
 ```
 
-### 步骤 3.5：提取关键帧截图（学习模式）
+### 步骤 3.5：截图提取已后移
 
-> 仅当存在视频文件时执行。如果只有音频文件（`.mp3`、`.wav` 等），跳过此步骤。
-
-使用 ffmpeg 按固定时间间隔截取关键帧画面，用于后续学习笔记中展示视频中的关键内容（如 PPT 幻灯片、代码截图、图表等）。
-
-```bash
-SKILL_DIR="${SKILL_DIR:-$HOME/.codex/skills/myriad-mind}"
-[ -d "$SKILL_DIR" ] || SKILL_DIR="$HOME/.claude/skills/myriad-mind"
-
-# 读取截图配置
-ENV_FILE="$SKILL_DIR/.env"
-KF_INTERVAL="30"
-KF_MAX_FRAMES="50"
-KF_MODE="interval"
-
-if [ -f "$ENV_FILE" ]; then
-  _val=$(grep "^KF_INTERVAL=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-  [ -n "$_val" ] && KF_INTERVAL="$_val"
-  _val=$(grep "^KF_MAX_FRAMES=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-  [ -n "$_val" ] && KF_MAX_FRAMES="$_val"
-  _val=$(grep "^KF_MODE=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-  [ -n "$_val" ] && KF_MODE="$_val"
-fi
-
-python3 "$SKILL_DIR/scripts/extract_keyframes.py" \
-  --video /tmp/video_analysis/{VIDEO_ID}/video.mp4 \
-  --output-dir /tmp/video_analysis/{VIDEO_ID} \
-  --interval "$KF_INTERVAL" \
-  --max-frames "$KF_MAX_FRAMES" \
-  --mode "$KF_MODE"
-```
-
-输出文件：
-- `/tmp/video_analysis/{VIDEO_ID}/frames/frame_0001_00m30s.png`
-- `/tmp/video_analysis/{VIDEO_ID}/frames/frame_0002_01m00s.png`
-- ...
-- `/tmp/video_analysis/{VIDEO_ID}/frames/keyframes.json` — 截图索引文件
-
-**如果 ffmpeg 找不到**：Windows 下尝试检查 `C:\Users\{USER}\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg*\ffmpeg-*\bin\ffmpeg.exe`；macOS: `brew install ffmpeg`；Linux: `sudo apt install ffmpeg`。
+> ⚠️ 截图提取现在依赖字幕内容分析，已后移至**步骤 4.7**（在 ASR 转写和字幕分析之后执行）。
+> 如果只有音频文件（`.mp3`、`.wav` 等），跳过步骤 4.5 和 4.7，没有截图。
 
 ### 步骤 4：根据 `ASR_BACKEND` 选择字幕后端
 
@@ -684,6 +664,153 @@ with open('/tmp/video_analysis/{VIDEO_ID}/subtitle.srt', 'w') as f:
     for i, u in enumerate(data['utterances'], 1):
         f.write(f"{i}\n{ms_to_srt(u['start_time'])} --> {ms_to_srt(u['end_time'])}\n{u['text']}\n\n")
 ```
+
+### 步骤 4.5：字幕分析 → 推荐截图时间点
+
+> 仅当 `ENABLE_KEYFRAMES=true` 且存在视频文件时执行。如果只有音频文件，跳过此步骤和步骤 4.7。
+
+字幕转写完成后，Claude 分析字幕文本，识别出**画面价值高的时刻**，输出一份推荐截图时间点列表供下一步精准截图。
+
+**分析信号（从字幕中识别"这个时刻画面有价值"的线索）：**
+
+| 信号类型 | 典型表述 | 说明 |
+| --- | --- | --- |
+| **画面展示信号** | "看这段代码"、"如图所示"、"我们来看一下架构图"、"注意这个表格" | 讲师明确指向视觉内容 |
+| **操作演示信号** | "点击这里"、"打开终端"、"运行一下"、"输入以下命令" | 教程操作步骤，需要截取界面 |
+| **代码相关信号** | "这段代码的作用是"、"函数定义"、"配置文件" | 代码讲解，需要截取代码画面 |
+| **PPT 翻页信号** | "下一页"、"接下来看"、"第一个要点"、"这一章" | 章节过渡，通常伴随 PPT 翻页 |
+| **对比/切换信号** | "对比一下"、"切换到"、"改成"、"前后的区别" | 画面变化，需要同时截取前后 |
+| **运行效果信号** | "运行结果"、"输出是"、"报错了"、"执行效果" | 程序运行结果，需要截取终端输出 |
+
+**不推荐截图的时刻：**
+
+| 信号 | 典型表述 | 原因 |
+| --- | --- | --- |
+| 开场闲聊 | "大家好"、"我是XXX"、"欢迎来到" | 无信息量 |
+| 纯口头讲解 | 无画面指涉的抽象概念讲解 | 字幕已覆盖 |
+| 片尾/预告 | "下期再见"、"下节课我们会" | 无当前内容信息 |
+| 过渡寒暄 | "好的"、"那我们继续"、"接下来" | 无视觉价值 |
+
+**输出格式：**
+
+Claude 将分析结果写入 `/tmp/video_analysis/{VIDEO_ID}/guided_timestamps.json`：
+
+```json
+[
+  {"ts": 32.0, "reason": "PPT标题页：ECS三大核心概念"},
+  {"ts": 95.0, "reason": "代码展示：Entity结构体定义"},
+  {"ts": 180.0, "reason": "架构图：ECS三者关系"},
+  {"ts": 245.0, "reason": "运行效果：Query示例输出"},
+  {"ts": 310.0, "reason": "PPT翻页：System执行流程"}
+]
+```
+
+**要求：**
+- 每个时间点 `ts` 必须与字幕 SRT 时间轴对齐（精确到秒）
+- `reason` 简述为什么这个时刻值得截图（20 字以内）
+- 推荐 8-25 个时间点（不要太多，也不要太少）
+- 如果字幕内容为纯谈话/访谈（无技术内容），输出空数组 `[]`
+
+### 步骤 4.7：精准截图提取
+
+> 仅当 `ENABLE_KEYFRAMES=true` 且存在视频文件时执行。
+
+结合步骤 4.5 的字幕引导时间点 + 场景变化检测，精准提取关键帧。字幕引导的时间点优先级最高（trigger=`guided`），scene 检测作为补充（trigger=`scene`），间隔保底兜底（trigger=`gap`）。
+
+```bash
+SKILL_DIR="${SKILL_DIR:-$HOME/.codex/skills/myriad-mind}"
+[ -d "$SKILL_DIR" ] || SKILL_DIR="$HOME/.claude/skills/myriad-mind"
+
+# 读取截图配置
+ENV_FILE="$SKILL_DIR/.env"
+KF_MAX_FRAMES="40"
+KF_SCENE_THRESHOLD="0.25"
+KF_MAX_GAP="120"
+KF_MIN_GAP="3"
+
+if [ -f "$ENV_FILE" ]; then
+  _val=$(grep "^KF_MAX_FRAMES=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+  [ -n "$_val" ] && KF_MAX_FRAMES="$_val"
+  _val=$(grep "^KF_SCENE_THRESHOLD=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+  [ -n "$_val" ] && KF_SCENE_THRESHOLD="$_val"
+  _val=$(grep "^KF_MAX_GAP=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+  [ -n "$_val" ] && KF_MAX_GAP="$_val"
+  _val=$(grep "^KF_MIN_GAP=" "$ENV_FILE" | head -1 | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+  [ -n "$_val" ] && KF_MIN_GAP="$_val"
+fi
+
+# 构建 --timestamps 参数（如果 guided_timestamps.json 存在）
+TIMESTAMPS_ARG=""
+if [ -f "/tmp/video_analysis/{VIDEO_ID}/guided_timestamps.json" ]; then
+  TIMESTAMPS_ARG="--timestamps /tmp/video_analysis/{VIDEO_ID}/guided_timestamps.json"
+fi
+
+python3 "$SKILL_DIR/scripts/extract_keyframes.py" \
+  --video /tmp/video_analysis/{VIDEO_ID}/video.mp4 \
+  --output-dir /tmp/video_analysis/{VIDEO_ID} \
+  $TIMESTAMPS_ARG \
+  --max-frames "$KF_MAX_FRAMES" \
+  --scene-threshold "$KF_SCENE_THRESHOLD" \
+  --max-gap "$KF_MAX_GAP" \
+  --min-gap "$KF_MIN_GAP"
+```
+
+**配置参数：**
+
+| 参数 | 默认值 | 说明 |
+| --- | --- | --- |
+| `KF_MAX_FRAMES` | 40 | 最大截图数量 |
+| `KF_SCENE_THRESHOLD` | 0.25 | 场景检测灵敏度（越低越敏感，0.15=极敏感，0.4=只抓大变化） |
+| `KF_MAX_GAP` | 120 | 最长静态间隔（秒），超过此值强制补截一张 |
+| `KF_MIN_GAP` | 3 | 最短帧间距（秒），小于此值的去重 |
+
+输出文件：
+- `/tmp/video_analysis/{VIDEO_ID}/frames/frame_0001_01m30s.png`
+- `/tmp/video_analysis/{VIDEO_ID}/frames/frame_0002_03m15s.png`
+- ...
+- `/tmp/video_analysis/{VIDEO_ID}/frames/keyframes.json` — 截图索引文件
+
+**keyframes.json 格式：**
+
+```json
+[
+  {
+    "file": "frame_0001_00m32s.png",
+    "timestamp_seconds": 32.0,
+    "timestamp_label": "00m32s",
+    "trigger": "guided",
+    "scene_score": 1.0
+  },
+  {
+    "file": "frame_0002_01m35s.png",
+    "timestamp_seconds": 95.0,
+    "timestamp_label": "01m35s",
+    "trigger": "guided",
+    "scene_score": 1.0
+  },
+  {
+    "file": "frame_0003_02m40s.png",
+    "timestamp_seconds": 160.0,
+    "timestamp_label": "02m40s",
+    "trigger": "scene",
+    "scene_score": 0.25
+  },
+  {
+    "file": "frame_0004_05m15s.png",
+    "timestamp_seconds": 315.0,
+    "timestamp_label": "05m15s",
+    "trigger": "gap",
+    "scene_score": 0.0
+  }
+]
+```
+
+- `trigger`: `"guided"` = 字幕引导（最高优先级），`"scene"` = 场景变化，`"gap"` = 间隔保底
+- `scene_score`: guided=1.0, scene>0, gap=0.0
+
+**优先级：** 去重时 guided > scene > gap（分数高的胜出）
+
+**如果 ffmpeg 找不到**：Windows 下尝试检查 `C:\Users\{USER}\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg*\ffmpeg-*\bin\ffmpeg.exe`；macOS: `brew install ffmpeg`；Linux: `sudo apt install ffmpeg`。
 
 ### 步骤 5：AI 生成总结
 
@@ -782,42 +909,118 @@ with open('/tmp/video_analysis/{VIDEO_ID}/subtitle.srt', 'w') as f:
 - 笔记中每个段落标题的时间范围，起始时间转为可点击链接，结束时间保留为纯文本
 - 截图旁边的时间戳同样生成可点击链接
 
-#### 步骤 7.1：截图选择决策规则（重要）
+#### 步骤 7.1：截图审查与选择（重要）
 
-视频每隔 `KF_INTERVAL` 秒截一张图，通常会有几十张。**Claude 必须逐一审视每张截图**，按以下标准决定是否放入笔记。
+> ⚠️ **本步骤必须按以下结构化流程执行，不可跳过或简化。**
 
-**前置校验：截图必须和字幕交叉对照**
+步骤 3.5 使用 smart 模式提取了场景变化 + 间隔保底的关键帧，数量通常在 10-40 张。Claude **必须逐一审视每张截图**并输出结构化审查表，再根据审查结果选择嵌入笔记的截图。
 
-每张截图都带有时间戳（文件名 `frame_XXXX_HHhMMmSSs.png`），**必须先定位到字幕中对应时间段的文字内容**，再判断截图价值：
+##### 第一阶段：逐张审查
+
+每张截图都带有时间戳（文件名 `frame_XXXX_HHhMMmSSs.png`），**必须先定位到字幕 SRT 中对应时间段的文字内容**，再判断截图价值。
+
+**前置校验：字幕-画面交叉对照**
 
 > 截图时间戳 → 查字幕 SRT 中同时间段的内容 → 判断"画面 + 字幕"组合是否有信息增量
 
-| 字幕 + 画面组合 | 决策 | 典型场景 |
+| 字幕 + 画面组合 | 上下文加成 | 说明 |
 | --- | --- | --- |
-| 实质性内容 + 信息画面 | ✅ **保留** | 讲代码逻辑时展示代码、讲架构时展示图表 |
-| 实质性内容 + 静态人脸 | ❌ **跳过** | 讲师在讲但画面只有脸，没有辅助视觉 |
-| 闲聊/过渡 + 任何画面 | ❌ **跳过** | 开场白、个人介绍、下节预告，"大家好我是XXX" |
-| 无字幕时间段 + 任何画面 | ❌ **跳过** | 沉默、片尾、广告段 |
-| 字幕讨论 A 话题 + 画面是 B 话题的 PPT | ❌ **跳过** | 画面和语音不同步，会产生误导 |
+| 实质性技术内容 + 信息画面 | ×1.0（满分） | 讲代码时展示代码、讲架构时展示图表 |
+| 实质性技术内容 + 静态人脸 | ×0.0（直接跳过） | 讲师在讲但画面只有脸，字幕已覆盖内容 |
+| 闲聊/过渡/片头片尾 + 任何画面 | ×0.3（降权） | 开场白、个人介绍、下节预告 |
+| 无字幕时间段 + 任何画面 | ×0.0（直接跳过） | 沉默、片尾、广告段 |
+| 字幕讨论 A 话题 + 画面是 B 话题 | ×0.0（直接跳过） | 画面和语音不同步，会产生误导 |
 
-**画面内容决策表（通过前置校验后）：**
+**截图类型标签与基础分（通过前置校验后）：**
 
-| 截图内容 | 决策 | 说明 |
+| 类型标签 | 基础分 | 判定标准 |
 | --- | --- | --- |
-| PPT 标题页/大纲/目录 | ✅ **保留** | 帮助读者建立全局认知 |
-| 代码/配置截图 | ✅ **保留** | 核心学习内容，必须配合文字说明 |
-| 架构图/流程图/图表 | ✅ **保留** | 如果图表复杂则截图，简单关系优先用 Mermaid |
-| 运行效果/演示画面 | ✅ **保留** | 让读者知道代码跑起来什么样 |
-| 编辑器界面操作 | ✅ **保留** | 帮助读者复现操作步骤 |
-| 数据表格/对比表 | ✅ **保留** | 数据密集，文字无法替代 |
-| 纯黑屏/过渡动画 | ❌ **跳过** | 无信息量 |
-| 静态人脸/说话画面 | ❌ **跳过** | 人像不传达技术信息 |
-| 与前后截图高度相似 | ❌ **跳过** | 只保留最有代表性的一张（同一页 PPT 截了多张，只留第一张） |
-| 纯文字段落（无图） | ❌ **跳过** | 文字内容已在字幕中 |
-| 空桌面/无关窗口 | ❌ **跳过** | 无信息量 |
-| 模糊/低质量画面 | ❌ **跳过** | 看不清不如不放 |
+| `PPT_TITLE` | 3 | PPT 标题页 / 大纲 / 目录 / 章节分隔页 |
+| `CODE_BLOCK` | 3 | 代码 / 配置文件 / 终端输出（有语法高亮或格式化） |
+| `ARCH_DIAGRAM` | 3 | 架构图 / 流程图 / 数据流图（复杂到 Mermaid 无法替代） |
+| `RUN_RESULT` | 3 | 程序运行效果 / 错误输出 / 调试信息 / 演示画面 |
+| `TOOL_UI` | 3 | 编辑器 / IDE / 工具操作界面（复现步骤需要） |
+| `DATA_TABLE` | 2 | 数据表格 / 对比表 / 参数列表 |
+| `SIMPLE_CHART` | 2 | 简单图表（如果关系简单到可用 Mermaid 重绘，降为 1 分） |
+| `SPLIT_SCREEN` | 2 | 分屏布局（讲师 + 代码/演示同时可见） |
+| `TALKING_HEAD` | 0 | 说话人脸画面，无辅助视觉信息 |
+| `PLAIN_TEXT` | 0 | 纯文字段落（字幕已覆盖） |
+| `BLACK_SCREEN` | 0 | 黑屏 / 过渡动画 / 加载画面 |
+| `STATIC_REPEAT` | 0 | 与前后截图高度相似（同一 PPT 页截了多次） |
+| `NO_INFO` | 0 | 空桌面 / 无关窗口 / 模糊画面 |
 
-**截图使用规则（必须遵守）：**
+**评分公式：**
+
+```
+最终得分 = 基础分 × 上下文加成
+
+≥ 3 → ✅ 必选（嵌入笔记）
+= 2 → ⚖️ 可选（笔记空间允许时放入）
+≤ 1 → ❌ 跳过
+```
+
+**去重规则（评分相同时）：**
+
+| 情况 | 处理 |
+| --- | --- |
+| 同一 PPT 页面截了多张 | 只保留第一张，后续标 `STATIC_REPEAT` |
+| 同一代码画面（内容无变化） | 只保留代码有变化的那张 |
+| 同一工具界面（操作无变化） | 只保留操作有变化的那张 |
+| 连续两张 0 分帧间隔 < 5s | 中间的也标 `NO_INFO` 跳过 |
+
+##### 第二阶段：输出审查表（强制）
+
+**在生成笔记正文之前，Claude 必须先输出以下审查表。**这张表是截图选择的唯一依据，没有审查表 = 没有完成截图审查。
+
+```markdown
+## 📸 截图审查记录（共 {N} 张，选中 {M} 张，跳过 {K} 张）
+
+| # | 时间 | 来源 | 字幕摘要(20字) | 类型标签 | 分数 | 决策 | 嵌入位置 |
+|---|------|------|----------------|---------|------|------|---------|
+| 1 | 0:32 | 🎯引导 | "PPT：ECS三大核心概念" | PPT_TITLE | 3 | ✅ | 二.核心概念 |
+| 2 | 1:35 | 🎯引导 | "代码：Entity结构体" | CODE_BLOCK | 3 | ✅ | 三.1 Entity |
+| 3 | 2:40 | 🔍场景 | "架构图：ECS三者关系" | ARCH_DIAGRAM | 3 | ✅ | 三.2 关系图 |
+| 4 | 3:50 | 🔍场景 | "下面看代码演示" | TALKING_HEAD | 0 | ❌ | — |
+| 5 | 5:15 | ⏱️保底 | "Query 的基本用法" | CODE_BLOCK | 3 | ✅ | 三.3 Query |
+| ... | | | | | | | |
+```
+
+**字段说明：**
+- `来源`：来自 keyframes.json 的 trigger 字段，用 emoji 标记：
+  - `🎯引导` = trigger `guided`（字幕分析推荐的时间点，优先级最高）
+  - `🔍场景` = trigger `scene`（场景变化检测）
+  - `⏱️保底` = trigger `gap`（间隔保底补充）
+- `字幕摘要`：对应时间段字幕的 **20 字以内**概括（强制交叉对照字幕）
+- `类型标签`：上面定义的标签（PPT_TITLE / CODE_BLOCK / TALKING_HEAD 等）
+- `分数`：基础分 × 上下文加成
+- `决策`：✅（≥3 分） / ⚖️（=2 分） / ❌（≤1 分）
+- `嵌入位置`：✅ 截图放在笔记的哪个章节（❌ 填 `—`）
+
+**特别注意：** `🎯引导` 帧是 Claude 在步骤 4.5 根据字幕分析主动推荐的，它们被跳过时必须在自检清单中说明原因。
+
+##### 第三阶段：自检清单（审查表之后、笔记正文之前）
+
+输出审查表后，Claude **必须逐项确认**以下检查点（在审查表下方列出确认结果）：
+
+```
+自检清单：
+□ 审查表行数 = keyframes.json 中的截图总数（不可遗漏）
+□ 每张 ❌ 都有明确的类型标签和理由（TALKING_HEAD / PLAIN_TEXT / ...）
+□ 每张 ✅ 都标注了嵌入位置（不是集中放在一个章节）
+□ 相似截图已去重（同一 PPT 页只保留一张）
+□ 选中数量在合理范围（通常 5-15 张，建议不超过总数的 50%）
+□ 教程模式额外：操作步骤的截图是否连续覆盖了完整流程
+```
+
+**异常处理：**
+
+| 情况 | 处理 |
+| --- | --- |
+| 截图 > 30 张（smart 模式下少见） | 优先保留 A 类（分数 ≥ 3），跳过所有 ⚖️ 可选帧 |
+| 截图 = 0（提取失败） | 跳过截图步骤，笔记标注 `⚠️ 截图提取失败，本笔记为纯文字版` |
+| 全部截图都是 0 分（纯谈话视频） | 输出审查表（全部 ❌），笔记标注 `本视频为谈话类内容，无信息性画面` |
+
+##### 截图使用规则（必须遵守）
 
 1. **内嵌到对应知识点旁边**：截图放在详细笔记中对应知识点的正下方，**不要集中放在单独的"关键画面"章节**。读者看到文字描述时应该能同时看到相关画面。
 2. **每张截图配时间戳链接**：截图下方用 `> 📸 [截图于 M:SS](链接?t=秒数)` 格式标注，让读者点击跳转到视频对应位置。
@@ -985,7 +1188,7 @@ flowchart TD
 4. 每步对应的关键截图放在流程图下方，用时间戳链接格式
 
 **截图增强：**
-教程模式下，`ENABLE_KEYFRAMES=true` 时降低截图间隔（将 `KF_INTERVAL` 临时设为 15-20 秒），更密集地捕获操作画面。截图紧跟在对应步骤下方：
+教程模式下，`ENABLE_KEYFRAMES=true` 时自动调低场景检测阈值和间隔保底（临时将 `KF_SCENE_THRESHOLD` 设为 0.15、`KF_MAX_GAP` 设为 60 秒），更密集地捕获操作画面。截图紧跟在对应步骤下方：
 
 ```markdown
 ### 步骤 1：打开项目 [▶ 0:00](https://www.bilibili.com/video/BVxxx/?t=0)
@@ -1284,11 +1487,16 @@ graph TD
 ```markdown
 > 🔧 **调试信息 / Debug Trace**
 >
+> ### A. 流水线耗时
+>
 > | 步骤 | 工具 | 耗时 | Token | 说明 |
 > | --- | --- | --- | --- | --- |
 > | 输入识别 | 步骤 0 | ~2s | - | 识别为 B站视频 / YouTube / 知乎文章 / ... |
 > | 数据读取 | Bash (cat) | ~5s | 5,000 | 从缓存读取字幕（XX KB）/ WebFetch 抓取 |
-> | 截图分析 | Read (PNG) | ~15s | 3,000 | 读取 N 张截图，选中 M 张 |
+> | ASR 转写 | faster-whisper | ~45s | - | 转写为 text.txt + subtitle.srt |
+> | 字幕分析 | 步骤 4.5 | ~8s | 2,000 | 识别 N 个推荐截图时间点 |
+> | 截图提取 | 步骤 4.7 (ffmpeg) | ~12s | - | 🎯引导:M张 + 🔍场景:K张 + ⏱️保底:J张 → 合并去重后 N 张 |
+> | 截图审查 | 步骤 7.1 (Read PNG) | ~15s | 3,000 | 逐一审视 N 张，选中 M 张 |
 > | 语言检测 | Claude | ~3s | 500 | 中文 → 跳过 / 英文 → 翻译 |
 > | 教程检测 | 步骤 7.4 | ~2s | 200 | 命中 → 启用教程模式 / 未命中 |
 > | 笔记生成 | Claude (Write) | ~90s | 35,000 | 生成结构化笔记正文 |
@@ -1299,13 +1507,71 @@ graph TD
 > | 输出写入 | Write | ~2s | - | 写入 {路径} |
 > | **合计** | | **~X 分钟** | **~XX,000** | |
 >
-> 决策链路：{INPUT} → 步骤0({MODE}) → 步骤0.7({TOKEN}) → {KEY_DECISIONS} → 步骤7 生成笔记 → 步骤8 {CLEANUP_ACTION}
+> ### B. 截图来源追踪
+>
+> 每张选中截图的完整"出生证明"：
+>
+> | 截图 | 时间 | 来源 | 引导原因 | 审查标签 | 评分 | 嵌入章节 |
+> | --- | --- | --- | --- | --- | --- | --- |
+> | frame_0001 | 0:32 | 🎯引导 | "PPT标题页：ECS三大核心概念" | PPT_TITLE | 3 | 二.核心概念 |
+> | frame_0002 | 1:35 | 🎯引导 | "代码展示：Entity结构体" | CODE_BLOCK | 3 | 三.1 Entity |
+> | frame_0003 | 2:40 | 🔍场景 | *(场景变化自动检测)* | ARCH_DIAGRAM | 3 | 三.2 关系图 |
+> | frame_0005 | 5:15 | ⏱️保底 | *(间隔120s保底)* | CODE_BLOCK | 3 | 三.3 Query |
+>
+> > 🎯引导 = 步骤4.5字幕分析推荐 → 步骤4.7精准截取 → 步骤7.1审查通过
+> > 🔍场景 = 步骤4.7 ffmpeg场景检测自动捕获 → 步骤7.1审查通过
+> > ⏱️保底 = 步骤4.7 间隔120s无变化时补截 → 步骤7.1审查通过
+>
+> 跳过的截图（共 K 张）：
+> | 截图 | 时间 | 来源 | 跳过原因 |
+> | --- | --- | --- | --- |
+> | frame_0004 | 3:50 | 🔍场景 | TALKING_HEAD(0分) × 无视觉信息 |
+> | frame_0006 | 6:20 | ⏱️保底 | BLACK_SCREEN(0分) × 无字幕 |
+>
+> ### C. 内容来源标注
+>
+> 笔记各章节的信息来源：
+>
+> | 章节 | 主要来源 | 补充来源 |
+> | --- | --- | --- |
+> | 一、AI 摘要 | 📝字幕(text.txt) | 📸截图(整体画面) |
+> | 二、核心概念 | 📝字幕 | 📸frame_0001(PPT标题页) |
+> | 三、详细笔记 | 📝字幕(subtitle.srt) | 📸frame_0002,03,05 |
+> | 四、术语表 | 🧠Claude推理 | 📝字幕 |
+> | 五、评论区精华 | 💬评论区 | — |
+> | 六、扩展资源 | 🧠Claude推理+🌐搜索 | — |
+>
+> > 📝字幕 = 来自 ASR 转写或平台字幕
+> > 📸截图 = 来自步骤4.7截图 + 步骤7.1视觉分析
+> > 💬评论区 = 来自步骤7.2评论抓取
+> > 🧠Claude推理 = Claude 基于上下文推断生成（非直接引用原文）
+> > 🌐搜索 = Claude 主动搜索的外部资源
+>
+> ### D. 决策链路
+>
+> 完整的处理决策路径：
+>
+> ```
+> {INPUT}
+>   → 步骤0(识别为 {MODE})
+>   → 步骤0.7(灵力: {TOKEN})
+>   → 步骤2(下载视频)
+>   → 步骤3(提取音频)
+>   → 步骤4(ASR: {ASR_BACKEND}, 产出 text.txt)
+>   → 步骤4.5(字幕分析: 推荐 {N} 个截图时间点)
+>   → 步骤4.7(截图: 🎯{G}引导 + 🔍{S}场景 + ⏱️{P}保底 → 去重后 {TOTAL}张)
+>   → 步骤5(AI摘要)
+>   → 步骤6(语言: {中文/英文→翻译})
+>   → 步骤7(笔记生成: 审查{TOTAL}张截图 → 选中{M}张 → 嵌入正文)
+>   → 步骤8({CLEANUP_ACTION})
+> ```
 ```
 
 **调试信息字段说明：**
-- **耗时**：近似墙钟时间（含 IO 等待），秒/分钟
-- **Token**：该步骤估算 token（输入+输出），"-" 表示可忽略
-- **合计**：总耗时和 token，应与元信息中"生成耗时""Token 消耗"接近
+- **A. 流水线耗时**：每个步骤的墙钟时间 + token 消耗
+- **B. 截图来源追踪**：每张截图的 trigger(来源) → reason(引导原因) → 审查结果 → 嵌入位置
+- **C. 内容来源标注**：笔记每章的信息来自哪个输入源（字幕/截图/评论/Claude/搜索）
+- **D. 决策链路**：完整的处理路径，含关键分支决策
 
 **输出路径决定逻辑：**
 
